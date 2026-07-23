@@ -1,31 +1,28 @@
-const path = require("path");
-process.env.DB_PATH = path.join(__dirname, "../data/test.db");
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL ||
+  "postgresql://postgres:postgres@localhost:5432/copilot_test";
 
 const request = require("supertest");
-const { db, initDb } = require("../src/config/db");
+const { initDb, run, end } = require("../src/config/db");
 const app = require("../src/app");
 
 beforeAll(async () => {
   await initDb();
-  await new Promise((resolve, reject) => {
-    db.run("DELETE FROM items", (err) => (err ? reject(err) : resolve()));
-  });
+  await run("DELETE FROM items");
 });
 
 afterAll(async () => {
-  await new Promise((resolve, reject) => {
-    db.close((err) => (err ? reject(err) : resolve()));
-  });
+  await end();
 });
 
-describe("SQLite-backed CRUD API", () => {
+describe("PostgreSQL-backed CRUD API", () => {
   it("GET /health returns OK", async () => {
     const res = await request(app).get("/health");
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: "ok" });
   });
 
-  it("POST /items creates one item in SQLite", async () => {
+  it("POST /items creates one item in PostgreSQL", async () => {
     const res = await request(app).post("/items").send({ name: "alpha" });
 
     expect(res.status).toBe(201);

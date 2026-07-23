@@ -5,13 +5,13 @@ async function findAll() {
 }
 
 async function findById(id) {
-  return get("SELECT * FROM items WHERE id = ?", [id]);
+  return get("SELECT * FROM items WHERE id = $1", [id]);
 }
 
 async function createItem(name) {
   const now = new Date().toISOString();
   const result = await run(
-    "INSERT INTO items (name, created_at, updated_at) VALUES (?, ?, ?)",
+    "INSERT INTO items (name, created_at, updated_at) VALUES ($1, $2, $3) RETURNING id",
     [name, now, now]
   );
 
@@ -21,7 +21,7 @@ async function createItem(name) {
 async function updateItem(id, name) {
   const now = new Date().toISOString();
   await run(
-    "UPDATE items SET name = ?, updated_at = ? WHERE id = ?",
+    "UPDATE items SET name = $1, updated_at = $2 WHERE id = $3",
     [name, now, id]
   );
 
@@ -32,7 +32,7 @@ async function deleteItem(id) {
   const item = await findById(id);
   if (!item) return null;
 
-  await run("DELETE FROM items WHERE id = ?", [id]);
+  await run("DELETE FROM items WHERE id = $1", [id]);
   return item;
 }
 
